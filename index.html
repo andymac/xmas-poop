@@ -53,45 +53,37 @@
 		</div>
 	</div>
 	<script type="text/javascript">
-		var overlaps = (function () {
-		    function getPositions( elem ) {
-		        var pos, width, height;
-		        pos = $( elem ).position();
-		        width = $( elem ).width();
-		        height = $( elem ).height();
-		        return [ [ pos.left, pos.left + width ], [ pos.top, pos.top + height ] ];
-		    }
 
-		    function comparePositions( p1, p2 ) {
-		        var r1, r2;
-		        r1 = p1[0] < p2[0] ? p1 : p2;
-		        r2 = p1[0] < p2[0] ? p2 : p1;
-		        return r1[1] > r2[0] || r1[0] === r2[0];
-		    }
+		var topOffset;
+		var targetObjects = [];
 
-		    return function ( a, b ) {
-		        var pos1 = getPositions( a ),
-		            pos2 = getPositions( b );
-		        return comparePositions( pos1[0], pos2[0] ) && comparePositions( pos1[1], pos2[1] );
-		    };
-		})();
 
-		function testCollision(position1, size1, size2,current) {
-			$('#targets div:not(.hidden)').each(function(){
-					position2 = $(this).offset();
-
-			        if (((position1.left + size1.width) > position2.left) && 
-			            ((position1.top + size1.height) > position2.top) && 
-			            ((position2.left + size2.width) > position1.left) && 
-			            ((position2.top + size2.height) > position1.top)) {
-			        	$(current).remove();
-			        	$(this).css('visibility','hidden').addClass('hidden');
-
-			            return false;
-			        }
-			    });
+		function testCollision(poop, size1, size2) {
+			
+			var position1 = poop.offset();
+			if(position1.top>(topOffset-50)){
+				for (var i = targetObjects.length - 1; i >= 0; i--) {
+				
+						var position2 = targetObjects[i];
+						var dropping = [ [ position1.left, position1.left + size1.width ], [ position1.top, position1.top + size1.height ] ];
+						var present = [ [ position2.left, position2.left + size2.width ], [ position2.top, position2.top + size2.height ] ];
+						
+					//if dropping target overlaps column
+					if (((dropping[0][0] >= present[0][0]) && ( dropping[0][0] <= present[0][1])) || ((dropping[0][1] >= present[0][0]) && (dropping[0][1] <= present[0][1]))){
+						if( (dropping[1][0] >= present[1][0]) && (dropping[1][0] <= present[1][1])  ){
+					        console.log('#'+targetObjects[i].id);
+	        				poop.remove();
+	        				$('#'+targetObjects[i].id).css('visibility','hidden').addClass('hidden');
+	        				getTargetObjects();
+	        				break;
+					            
+					    };
+					    
+					}
+				}
 			
 		    }
+		}
 
 		// function detectOverlapping() {
 		//         // code that detects if the box overlaps with a moving box
@@ -103,11 +95,24 @@
 	             width: 20
 	         };
 
-         var gifts = jQuery("#targets div:first-child");
+
          var giftsSize = {
-             height: gifts.height(),
-             width: gifts.width()
+             height: 45,
+             width: 45
          };
+
+         function getTargetObjects(){
+         	targetObjects = [];
+         	target = new Object();
+         	$('#targets div:not(.hidden)').each(function(){
+         		target = { 
+         			'left': $(this).offset().left,
+         			'top': $(this).offset().top,
+         			'id':$(this).attr('id')}
+
+         		targetObjects.push(target);
+         	});	
+         }
 
 		function bombsAway(){
 
@@ -123,56 +128,22 @@
 
 			     $('body').jGravity({
 	               target: '.gravity',
-	               weight: 15,
+	               weight: 20,
 	               depth: 1,
 	          	});
+			     var thisBox = $('#box'+divIndex)
+				var test = setInterval(function(){testCollision(thisBox,dropSize,giftsSize)},10);
 
-				var test = setInterval(function(){testCollision($('#box'+divIndex).offset(),dropSize,giftsSize,'#box'+divIndex)},10);
-
-			   setTimeout(function(){clearInterval(test)},2000);
+			   setTimeout(function(){clearInterval(test)},3000);
 
 
 		    
 		}
 
 		$(function () {
-		    // var area = $( '#canvas' )[0],
-		    //     box = $( '#box1' )[0],
-		    //     html;
-		    
-		    // html = $( area ).children().not( box ).map( function ( i ) {
-		    //     return '<p>Red box + Box ' + ( i + 1 ) + ' = ' + overlaps( box, this ) + '</p>';
-		    // }).get().join( '' );
-
-		    
-		    //setInterval(collisionDetect, 10);
-
-		    //detectOverlapping(); 
-
-		    //$( 'body' ).append( html );
 		
 
 		     //deer
-		     $("body").keydown(function(e) {
-		       if(e.keyCode == 37) { // left
-		       		if(parseInt($('#deer').css('margin-left'), 10)>0){
-		       			console.log('test');
-				         $("#deer").stop().animate({
-				           marginLeft: "-=50"
-				         });
-				    }
-		       }
-		       else if(e.keyCode == 39) { // right
-		         if(parseInt($('#deer').css('margin-left'),10)<$(document).width()){
-				         $("#deer").stop().animate({
-				           marginLeft: "+=50"
-				         });
-				    }
-		       }
-		       else if(e.keyCode == 32){
-		       		bombsAway();
-		       }
-		     });
 		     $('body').mousemove(function(e){
 		     	$('#deer').css('margin-left',e.pageX);
 		     });
@@ -186,9 +157,11 @@
 		     targets = $('#targets');
 
 		     for (var i = divs; i >= 0; i--) {
-		     	var newDiv = $('<div />');
+		     	var newDiv = $('<div />').attr('id','target'+i);
 		     	targets.append(newDiv);
 		     };
+		     topOffset = targets.offset().top;
+		     getTargetObjects();
 
 		     
 
