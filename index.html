@@ -1,0 +1,200 @@
+<html>
+<head>
+	<title></title>
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.8.3.min.js"></script>
+	<script type="text/javascript" src="jGravity-min.js"></script>
+	<style type="text/css">
+
+		body {
+			background: url('bg.jpg') no-repeat;
+			background-size: cover;
+			position: relative;
+		}
+		#deer {
+			margin-top: 50px;
+			margin-left: 50px;
+			width: 100px;
+			height: 100px;
+			display: inline-block;
+			background: url('reindeer.png') top left no-repeat;
+			background-size: 100px 100px;
+		}
+		#targets {
+			height: 200px;
+			width: 100%;
+			position: absolute;
+			bottom: 0;
+			text-align: center;
+		}
+		#targets div {
+			float: left;
+			background: url('gift.png') 5px top no-repeat;
+			background-size: 40px 40px;
+			width: 40px; height: 40px; margin: 5px;
+		}
+
+		.gravity {
+			position: absolute;
+			width: 20px;
+			height: 20px;
+			background: url('poop.png') top left no-repeat;
+			background-size: 20px 20px;
+		}
+
+	</style>
+</head>
+<body>
+	<div id="canvas">
+		<div id="deer">
+
+		</div>
+		<div id="targets">
+			
+		</div>
+	</div>
+	<script type="text/javascript">
+		var overlaps = (function () {
+		    function getPositions( elem ) {
+		        var pos, width, height;
+		        pos = $( elem ).position();
+		        width = $( elem ).width();
+		        height = $( elem ).height();
+		        return [ [ pos.left, pos.left + width ], [ pos.top, pos.top + height ] ];
+		    }
+
+		    function comparePositions( p1, p2 ) {
+		        var r1, r2;
+		        r1 = p1[0] < p2[0] ? p1 : p2;
+		        r2 = p1[0] < p2[0] ? p2 : p1;
+		        return r1[1] > r2[0] || r1[0] === r2[0];
+		    }
+
+		    return function ( a, b ) {
+		        var pos1 = getPositions( a ),
+		            pos2 = getPositions( b );
+		        return comparePositions( pos1[0], pos2[0] ) && comparePositions( pos1[1], pos2[1] );
+		    };
+		})();
+
+		function testCollision(position1, size1, size2,current) {
+			$('#targets div:not(.hidden)').each(function(){
+					position2 = $(this).offset();
+
+			        if (((position1.left + size1.width) > position2.left) && 
+			            ((position1.top + size1.height) > position2.top) && 
+			            ((position2.left + size2.width) > position1.left) && 
+			            ((position2.top + size2.height) > position1.top)) {
+			        	$(current).remove();
+			        	$(this).css('visibility','hidden').addClass('hidden');
+
+			            return false;
+			        }
+			    });
+			
+		    }
+
+		// function detectOverlapping() {
+		//         // code that detects if the box overlaps with a moving box
+		//         setInterval(detectOverlapping, 25);
+		//     }
+		var divIndex = 0;
+		var dropSize = {
+	             height: 20,
+	             width: 20
+	         };
+
+         var gifts = jQuery("#targets div:first-child");
+         var giftsSize = {
+             height: gifts.height(),
+             width: gifts.width()
+         };
+
+		function bombsAway(){
+
+
+		     
+		     	++divIndex;
+		     	var newDiv = $('<div />').attr({
+		     		id: 'box'+divIndex,
+		     		class: 'gravity'
+		     	}).css('left',$('#deer').offset().left+65).css('top', $('#deer').offset().top+30);
+
+		     	$('body').append(newDiv);
+
+			     $('body').jGravity({
+	               target: '.gravity',
+	               weight: 15,
+	               depth: 1,
+	          	});
+
+				var test = setInterval(function(){testCollision($('#box'+divIndex).offset(),dropSize,giftsSize,'#box'+divIndex)},10);
+
+			   setTimeout(function(){clearInterval(test)},2000);
+
+
+		    
+		}
+
+		$(function () {
+		    // var area = $( '#canvas' )[0],
+		    //     box = $( '#box1' )[0],
+		    //     html;
+		    
+		    // html = $( area ).children().not( box ).map( function ( i ) {
+		    //     return '<p>Red box + Box ' + ( i + 1 ) + ' = ' + overlaps( box, this ) + '</p>';
+		    // }).get().join( '' );
+
+		    
+		    //setInterval(collisionDetect, 10);
+
+		    //detectOverlapping(); 
+
+		    //$( 'body' ).append( html );
+		
+
+		     //deer
+		     $("body").keydown(function(e) {
+		       if(e.keyCode == 37) { // left
+		       		if(parseInt($('#deer').css('margin-left'), 10)>0){
+		       			console.log('test');
+				         $("#deer").stop().animate({
+				           marginLeft: "-=50"
+				         });
+				    }
+		       }
+		       else if(e.keyCode == 39) { // right
+		         if(parseInt($('#deer').css('margin-left'),10)<$(document).width()){
+				         $("#deer").stop().animate({
+				           marginLeft: "+=50"
+				         });
+				    }
+		       }
+		       else if(e.keyCode == 32){
+		       		bombsAway();
+		       }
+		     });
+		     $('body').mousemove(function(e){
+		     	$('#deer').css('margin-left',e.pageX);
+		     });
+		     $('body').click(function(){
+		     	bombsAway();
+		     })
+
+		         
+
+		     var divs = 100;
+		     targets = $('#targets');
+
+		     for (var i = divs; i >= 0; i--) {
+		     	var newDiv = $('<div />');
+		     	targets.append(newDiv);
+		     };
+
+		     
+
+
+		});
+
+	</script>
+</body>
+</html>
